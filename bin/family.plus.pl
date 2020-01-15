@@ -75,7 +75,7 @@ for my $fileIndex (0 .. $#fileList) {
 print STDERR "load Done\n";
 my $keyFile   = $fileList[0];
 my $keySample = basename($keyFile);
-open OUT, ">$keySample.family.tsv" or die $!;
+open OUT, ">$keySample.family.all.tsv" or die $!;
 for (0 .. $#fileList) {
 	print OUT join("\t","##familyInfo",(split /\./,basename($fileList[$_]))[0]),"\n";
 }
