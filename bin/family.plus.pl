@@ -7,7 +7,7 @@ use Data::Dumper;
 
 $#ARGV < 1 and die "$0 proband \@Family\n";
 
-
+my $debug = 0;
 
 my %index;
 my @header;
@@ -53,6 +53,11 @@ for my $fileIndex (0 .. $#fileList) {
 					}
 					die"anno heder not match!\n";
 				}
+			}
+			if ($debug and $fileIndex == 0) {
+				print STDERR join("\t", "locIndex:",  @locIndex),  "\n";
+				print STDERR join("\t", "keyIndex:",  @keyIndex),  "\n";
+				print STDERR join("\t", "uniqIndex:", @uniqIndex), "\n";
 			}
 			next;
 		}
