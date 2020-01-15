@@ -7,7 +7,6 @@ use Data::Dumper;
 
 $#ARGV < 1 and die "$0 proband \@Family\n";
 
-my @uniqIndex = (4, 5, 10, 11, 12, 13, 14, 16, 101);
 
 
 my %index;
@@ -16,6 +15,8 @@ my @loc = qw/Chr Start Stop/;
 my @locIndex;     # = (0, 1, 2);
 my @key = qw/Chr Start Stop Ref VarType MType Call MutationName cHGVS/;
 my @keyIndex;     # = (0, 1, 2, 6, 7, 8, 43);
+my @uniq = qw/InExcel NbGID Zygosity A.Depth A.Ratio PhasedGID A.Index Filter AutoInterpStatus AD PL GType Ratio Genotype Sex SampleID/;
+my @uniqIndex;    # = (4, 5, 10, 11, 12, 13, 14, 16, 101);
 
 my @fileList = @ARGV;
 my %uniqData;
@@ -37,7 +38,11 @@ for my $fileIndex (0 .. $#fileList) {
 					exists $index{$key}
 					  and push @keyIndex, $index{$key};
 				}
-			} elsif ($#header == -1 or $#locIndex == -1) {
+				for my $key (@uniq) {
+					exists $index{$key}
+					  and push @uniqIndex, $index{$key};
+				}
+			} elsif ($#header == -1 or $#locIndex == -1 or $#keyIndex == -1 or $#uniqIndex == -1) {
 				die "anno result format error!\n";
 			} else {
 				my@ln=split /\t/,$_;
@@ -51,23 +56,13 @@ for my $fileIndex (0 .. $#fileList) {
 			}
 			next;
 		}
-		my@ln=split /\t/,$_;
-		my$key=join("\t",@ln[@keyIndex]);
-		if($fileIndex){
-			if(exists$uniqData{$key}){
-				for(@uniqIndex){
-					$uniqData{$key}{$_}[$fileIndex]=$ln[$_];
-				}
-			}
-			#print STDERR Dumper($uniqData{$key});
-		}else{
-			for(@uniqIndex){
-				$uniqData{$key}{$_}[$fileIndex]=$ln[$_];
-			}
-			#print STDERR Dumper($uniqData{$key});
-		}
+		my @ln = split /\t/, $_;
+		my $key = join("\t", @ln[@keyIndex]);
 		exists$allData{$key}
 			or $allData{$key}=$_;
+		for (@uniqIndex) {
+			$uniqData{$key}{$_}[$fileIndex] = $ln[$_];
+		}
 	}
 	close IN;
 }
