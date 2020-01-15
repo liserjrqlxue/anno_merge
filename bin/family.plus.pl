@@ -10,14 +10,42 @@ $#ARGV < 1 and die "$0 proband \@Family\n";
 my @keyIndex = (0, 1, 2, 6, 7, 8, 43);
 my @uniqIndex = (4, 5, 10, 11, 12, 13, 14, 16, 101);
 
+
+my %index;
+my @header;
+my @loc = qw/Chr Start Stop/;
+my @locIndex;     # = (0, 1, 2);
+
 my @fileList = @ARGV;
 my %uniqData;
 my %allData;
 for my $fileIndex (0 .. $#fileList) {
 	open IN, "zcat -f $fileList[$fileIndex]|" or die $!;
 	while (<IN>) {
-		/^#/ and next;
+		/^##/ and next;
 		chomp;
+		if (s/^#//) {
+			if ($#header == -1 and $fileIndex == 0) {
+				@header = split /\t/, $_;
+				@index{@header} = 0 .. $#header;
+				for my $key (@loc) {
+					exists $index{$key}
+					  and push @locIndex, $index{$key};
+				}
+			} elsif ($#header == -1 or $#locIndex == -1) {
+				die "anno result format error!\n";
+			} else {
+				my@ln=split /\t/,$_;
+				unless(@ln~~@header){
+					for(0..$#ln){
+						$ln[$_]eq$header[$_]
+					or 	print STDERR join("\t",$_,$ln[$_],$header[$_]),"\n";
+					}
+					die"anno heder not match!\n";
+				}
+			}
+			next;
+		}
 		my@ln=split /\t/,$_;
 		my$key=join("\t",@ln[@keyIndex]);
 		if($fileIndex){
@@ -44,16 +72,10 @@ my $keyFile   = $fileList[0];
 my $keySample = basename($keyFile);
 open OUT, ">$keySample.family.tsv" or die $!;
 for (0 .. $#fileList) {
-	print OUT join("\t","##familyInfo",$_,$fileList[$_]),"\n";
+	print OUT join("\t","##familyInfo",(split /\./,basename($fileList[$_]))[0]),"\n";
 }
-open IN,"zcat -f $fileList[0]|" or die$!;
-while (<IN>) {
-	if(/^#/){
-		print OUT;
-		break
-	}
-}
-close IN;
+
+print OUT "#",join("\t",@header),"\n";
 for my$key(sort{$a cmp$b}keys%allData){
 	my$ln=$allData{$key};
 	my @ln = split /\t/, $ln;
