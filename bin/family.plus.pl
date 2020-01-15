@@ -11,7 +11,7 @@ my @keyIndex = (0, 1, 2, 6, 7, 8, 43);
 my @uniqIndex = (4, 5, 10, 11, 12, 13, 14, 16, 101);
 
 my @fileList = @ARGV;
-my %hash;
+my %uniqData;
 for my$fileIndex(0..$#fileList){
 	open IN,"zcat -f $fileList[$fileIndex]|" or die$!;
 	while(<IN>){
@@ -20,30 +20,30 @@ for my$fileIndex(0..$#fileList){
 		my@ln=split /\t/,$_;
 		my$key=join("\t",@ln[@keyIndex]);
 		if($fileIndex){
-			if(exists$hash{$key}){
+			if(exists$uniqData{$key}){
 				for(@uniqIndex){
-					$hash{$key}{$_}[$fileIndex]=$ln[$_];
+					$uniqData{$key}{$_}[$fileIndex]=$ln[$_];
 				}
 			}
-			#print STDERR Dumper($hash{$key});
+			#print STDERR Dumper($uniqData{$key});
 		}else{
 			for(@uniqIndex){
-				$hash{$key}{$_}[$fileIndex]=$ln[$_];
+				$uniqData{$key}{$_}[$fileIndex]=$ln[$_];
 			}
-			#print STDERR Dumper($hash{$key});
+			#print STDERR Dumper($uniqData{$key});
 		}
 	}
 	close IN;
 }
 
 print STDERR "load Done\n";
-my$keyFile=$fileList[0];
-my$keySample=basename($keyFile);
-open IN,"zcat -f $fileList[0]|" or die$!;
+my $keyFile   = $fileList[0];
+my $keySample = basename($keyFile);
 open OUT, ">$keySample.family.tsv" or die $!;
 for (0 .. $#fileList) {
-	print OUT join("\t", "##", $_, $fileList[$_]), "\n";
+	print OUT join("\t","##familyInfo",$_,$fileList[$_]),"\n";
 }
+open IN,"zcat -f $fileList[0]|" or die$!;
 while (<IN>) {
 	if(/^#/){
 	  print OUT;
@@ -52,13 +52,13 @@ while (<IN>) {
 	chomp;
 	my @ln = split /\t/, $_;
 	my $key = join("\t", @ln[@keyIndex]);
-	exists$hash{$key} or print STDERR "$key\n";
-	for my$uniqIndex(@uniqIndex){
-		for my$fileIndex(0..$#fileList){
-			defined$hash{$key}{$uniqIndex}[$fileIndex]
-				or $hash{$key}{$uniqIndex}[$fileIndex]="NA";
+	exists $uniqData{$key} or die "$key not found\n";
+	for my $uniqIndex (@uniqIndex) {
+		for my $fileIndex (0 .. $#fileList) {
+			defined $uniqData{$key}{$uniqIndex}[$fileIndex]
+			  or $uniqData{$key}{$uniqIndex}[$fileIndex] = "NA";
 		}
-		$ln[$uniqIndex]=join(";",@{$hash{$key}{$uniqIndex}});
+		$ln[$uniqIndex] = join(";", @{$uniqData{$key}{$uniqIndex}});
 	}
 	print OUT join("\t", @ln), "\n";
 }
