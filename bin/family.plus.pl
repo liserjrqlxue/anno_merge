@@ -7,7 +7,6 @@ use Data::Dumper;
 
 $#ARGV < 1 and die "$0 proband \@Family\n";
 
-my @keyIndex = (0, 1, 2, 6, 7, 8, 43);
 my @uniqIndex = (4, 5, 10, 11, 12, 13, 14, 16, 101);
 
 
@@ -15,6 +14,8 @@ my %index;
 my @header;
 my @loc = qw/Chr Start Stop/;
 my @locIndex;     # = (0, 1, 2);
+my @key = qw/Chr Start Stop Ref VarType MType Call MutationName cHGVS/;
+my @keyIndex;     # = (0, 1, 2, 6, 7, 8, 43);
 
 my @fileList = @ARGV;
 my %uniqData;
@@ -31,6 +32,10 @@ for my $fileIndex (0 .. $#fileList) {
 				for my $key (@loc) {
 					exists $index{$key}
 					  and push @locIndex, $index{$key};
+				}
+				for my $key (@key) {
+					exists $index{$key}
+					  and push @keyIndex, $index{$key};
 				}
 			} elsif ($#header == -1 or $#locIndex == -1) {
 				die "anno result format error!\n";
