@@ -12,9 +12,10 @@ my @uniqIndex = (4, 5, 10, 11, 12, 13, 14, 16, 101);
 
 my @fileList = @ARGV;
 my %uniqData;
-for my$fileIndex(0..$#fileList){
-	open IN,"zcat -f $fileList[$fileIndex]|" or die$!;
-	while(<IN>){
+my %allData;
+for my $fileIndex (0 .. $#fileList) {
+	open IN, "zcat -f $fileList[$fileIndex]|" or die $!;
+	while (<IN>) {
 		/^#/ and next;
 		chomp;
 		my@ln=split /\t/,$_;
@@ -32,6 +33,8 @@ for my$fileIndex(0..$#fileList){
 			}
 			#print STDERR Dumper($uniqData{$key});
 		}
+		exists$allData{$key}
+			or $allData{$key}=$_;
 	}
 	close IN;
 }
@@ -46,12 +49,14 @@ for (0 .. $#fileList) {
 open IN,"zcat -f $fileList[0]|" or die$!;
 while (<IN>) {
 	if(/^#/){
-	  print OUT;
-		next;
+		print OUT;
+		break
 	}
-	chomp;
-	my @ln = split /\t/, $_;
-	my $key = join("\t", @ln[@keyIndex]);
+}
+close IN;
+for my$key(sort{$a cmp$b}keys%allData){
+	my$ln=$allData{$key};
+	my @ln = split /\t/, $ln;
 	exists $uniqData{$key} or die "$key not found\n";
 	for my $uniqIndex (@uniqIndex) {
 		for my $fileIndex (0 .. $#fileList) {
@@ -62,5 +67,4 @@ while (<IN>) {
 	}
 	print OUT join("\t", @ln), "\n";
 }
-close IN;
 close OUT;
